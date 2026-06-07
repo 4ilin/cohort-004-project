@@ -12,6 +12,8 @@ import { UserAvatar } from "~/components/user-avatar";
 import { getCurrentUserId } from "~/lib/session";
 import { formatPrice } from "~/lib/utils";
 import { getUserEnrolledCourses } from "~/services/enrollmentService";
+import { getCourseRatingSummary } from "~/services/ratingService";
+import { RatingSummary } from "~/components/star-rating";
 import { calculateProgress, getCompletedLessonCount } from "~/services/progressService";
 import { resolveCountry } from "~/lib/country.server";
 import { calculatePppPrice } from "~/lib/ppp";
@@ -60,12 +62,15 @@ export async function loader({ request }: Route.LoaderArgs) {
     const pppPrice = course.pppEnabled
       ? calculatePppPrice(course.price, country)
       : course.price;
+    const ratingSummary = getCourseRatingSummary(course.id);
     return {
       ...course,
       lessonCount: getLessonCountForCourse(course.id),
       progress: userProgress?.progress ?? null,
       completedLessons: userProgress?.completedLessons ?? null,
       pppPrice,
+      averageRating: ratingSummary.averageRating,
+      ratingCount: ratingSummary.ratingCount,
     };
   });
 
@@ -204,6 +209,11 @@ export default function CourseCatalog({ loaderData }: Route.ComponentProps) {
                   <h3 className="text-lg font-semibold leading-tight group-hover:text-primary">
                     {course.title}
                   </h3>
+                  <RatingSummary
+                    averageRating={course.averageRating}
+                    ratingCount={course.ratingCount}
+                    className="text-xs"
+                  />
                 </CardHeader>
                 <CardContent>
                   <p className="line-clamp-2 text-sm text-muted-foreground">
